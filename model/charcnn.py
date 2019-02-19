@@ -9,10 +9,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+
 class CharCNN(nn.Module):
     def __init__(self, alphabet_size, embedding_dim, hidden_dim, dropout, gpu):
         super(CharCNN, self).__init__()
-        print "build batched char cnn..."
+        print("build batched char cnn...")
         self.gpu = gpu
         self.hidden_dim = hidden_dim
         self.char_drop = nn.Dropout(dropout)
@@ -24,14 +25,12 @@ class CharCNN(nn.Module):
             self.char_embeddings = self.char_embeddings.cuda()
             self.char_cnn = self.char_cnn.cuda()
 
-
     def random_embedding(self, vocab_size, embedding_dim):
         pretrain_emb = np.empty([vocab_size, embedding_dim])
         scale = np.sqrt(3.0 / embedding_dim)
         for index in range(vocab_size):
-            pretrain_emb[index,:] = np.random.uniform(-scale, scale, [1, embedding_dim])
+            pretrain_emb[index, :] = np.random.uniform(-scale, scale, [1, embedding_dim])
         return pretrain_emb
-
 
     def get_last_hiddens(self, input, seq_lengths):
         """
@@ -44,7 +43,7 @@ class CharCNN(nn.Module):
         """
         batch_size = input.size(0)
         char_embeds = self.char_drop(self.char_embeddings(input))
-        char_embeds = char_embeds.transpose(2,1).contiguous()
+        char_embeds = char_embeds.transpose(2, 1).contiguous()
         char_cnn_out = self.char_cnn(char_embeds)
         char_cnn_out = F.max_pool1d(char_cnn_out, char_cnn_out.size(2)).view(batch_size, -1)
         return char_cnn_out
@@ -60,12 +59,9 @@ class CharCNN(nn.Module):
         """
         batch_size = input.size(0)
         char_embeds = self.char_drop(self.char_embeddings(input))
-        char_embeds = char_embeds.transpose(2,1).contiguous()
-        char_cnn_out = self.char_cnn(char_embeds).transpose(2,1).contiguous()
+        char_embeds = char_embeds.transpose(2, 1).contiguous()
+        char_cnn_out = self.char_cnn(char_embeds).transpose(2, 1).contiguous()
         return char_cnn_out
-
-
 
     def forward(self, input, seq_lengths):
         return self.get_all_hiddens(input, seq_lengths)
-        
